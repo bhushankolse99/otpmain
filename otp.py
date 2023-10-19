@@ -1,84 +1,89 @@
+#Importing requires libraries
+import smtplib
 import random
-import time
+from twilio.rest import Client
 
-# Placeholder functions for sending SMS and emails
-def send_sms(phone_number, message):
-    print(f"Sending SMS to {phone_number}: {message}")
+#User and Twilio info
+account_sid = 'AC73ca0aff58a7d9cd2eca09b0df9161e1'
+auth_token = 'c133c1d534a34bbf7cd3414d25f5cafe'
+client = Client(account_sid, auth_token)
+twilio_num = '+12697679255'
+target = input("Please Enter Your Mobile Number : ")
 
-def send_email(email_address, message):
-    print(f"Sending email to {email_address}: {message}")
-
-def generate_otp():
+#Function to generate OTP
+def generateOtp(n = 6):
     otp = ""
-    for _ in range(6):
+    for i in range(n):
         otp += str(random.randint(0, 9))
     return otp
 
-def send_otp(recipient, recipient_type):
-    otp = generate_otp()
-    if recipient_type == "mobile":
-        send_sms(recipient, f"Your OTP is: {otp}")
-    elif recipient_type == "email":
-        send_email(recipient, f"Your OTP is: {otp}")
-    else:
-        raise ValueError(f"Invalid recipient type: {recipient_type}")
+#Function to validate mobile
+def validateMobile(mobile):
+    return len(mobile) == 10 and mobile.isdigit()
 
-def verify_otp(recipient, otp, recipient_type):
-    # Implement a mechanism to store and retrieve OTPs for verification
-    # Compare the provided OTP with the stored OTP for the recipient
-    # Return True if they match, False otherwise
-    pass
-
-if __name__ == "__main__":
-    recipient = input("Enter recipient (mobile number or email address): ")
-    recipient_type = input("Enter recipient type (mobile or email): ")
-
-    send_otp(recipient, recipient_type)
-
-    # Simulate a delay for OTP expiration
-    time.sleep(60)
-
-    entered_otp = input("Enter OTP: ")
-    if verify_otp(recipient, entered_otp, recipient_type):
-        print("OTP verified successfully!")
-    else:
-        print("Invalid OTP!")
-def generate_otp(length=6):
-    otp = ""
-    for i in range(length):
-        otp += random.choice("0123456789")
-    return otp
-def generate_otp(length=6):
-    otp = ""
-    for i in range(length):
-        otp += random.choice("0123456789")
-    return otp
-def verify_email_otp(otp, email):
-    now = datetime.datetime.now()
-    expiry_time = datetime.datetime.timestamp(now) + 180
-
-    if otp != email_otps[email]:
+#Function to validate Email
+def validateEmailID(receiver):
+    if "@" not in receiver or "." not in receiver:
         return False
-
-    if expiry_time < now.timestamp():
-        return False
-
     return True
-def main():
-    email = input("Enter your email address: ")
 
-    # Generate an OTP
-    otp = generate_otp()
+# Send OTP over mobile using Twilio
+def sendOTPOverMobile(target, otp):
+    if(validateMobile(target)):
+        target = "+91" + target
+        message = client.messages.create(
+            body = "Your OTP is " + otp + ". Valid for next 15 minutes.",
+            from_= twilio_num,
+            to=target
+        )
 
-    # Send the OTP
-    send_email_otp(otp, email)
-
-    # Verify the OTP
-    user_otp = input("Enter the OTP sent to your email address: ")
-    if verify_email_otp(user_otp, email):
-        print("Your email address has been verified successfully!")
+        print(message.body)
+        print("Check Phone! Sent to ", target)
     else:
-        print("Invalid OTP.")
+        print("Enter valid mobile number!!")
 
+# Send OTP over email using SMTP
+def sendOTPOverEmail(receiver, otp):
+    body = "Your OTP is " + otp + ". Valid for next 15 minutes."
+
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(sender, password)
+    server.sendmail(sender, receiver, body)
+
+    print("Mail sent - OTP: ", otp)
+
+
+#Driver Code
 if __name__ == "__main__":
-    main()
+
+    print("Hello there!! \n Welcome to OTP Sender\n")
+
+    sender = "aradwadrushabh@gmail.com"
+    password = "hwjpsgjqncvzfcxf"
+    # User input for email
+    receiver = input("Enter mail: ")
+
+    #create a unique Otp
+    otp = generateOtp(6)
+
+    #Send OTP over Email
+    if(validateEmailID(receiver)):
+        sendOTPOverEmail(receiver, otp)
+    else:
+        print("Please Enter valid mail!!")
+
+
+    #Send OTP over SMS
+    send_twilio = input("\nDo you want to send OTP via SMS: ")
+    if send_twilio.lower() == "yes":
+        # User input for mobile
+        target = input("Enter mobile: ")
+
+        sendOTPOverMobile(target, otp)
+        
+        print("\nOTP sending program ended\n")
+    else:
+        print("OTP sending program ended")
+
+    #Program Ended
